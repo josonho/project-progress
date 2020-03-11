@@ -1,0 +1,218 @@
+<style>
+    [v-cloak] {
+        display: none;
+    }
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    .swiper-wrapper {
+        height: auto!important;
+    }
+
+    .table-g {
+        overflow: hidden;
+    }
+    .table.name-col {
+        width: 20%;
+        float: left;
+    }
+    .swiper-container {
+        width: 80%;
+        float: left;
+    }
+
+    .table-row {
+        display: flex;
+        background: #fff;
+    }
+    .table-row.header {
+        background: #3b99fb;
+        color: #fff;
+    }
+    .table-col {
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        overflow: hidden;
+        line-height: 21px;
+        padding: 0 5px;
+    }
+    .table-col.time {
+        flex-flow: column;
+    }
+    .time .end-time {
+        color: #777;
+    }
+    .table-col.status {
+        color: #6da276;
+    }
+    .table-col.status.testing {
+        color: #f79540;
+    }
+
+    .progress {
+        width: 150px;
+        height: 30px;
+        border-radius: 15px;
+        background: #ccc;
+        overflow: hidden;
+    }
+    .done {
+        height: 30px;
+        border-radius: 15px;
+        background: #f79540;
+        float: left;
+    }
+    .done.completed {
+        background: #3b99fb;
+        width: 100%;
+    }
+
+    .logo {
+        /* 设置logo最大高度 */
+        max-height: 370px; 
+        height: 370px;
+        bottom: 0;
+        position: absolute;
+        width: 100%;
+        overflow: hidden;
+        margin-bottom: 40px;
+        display: flex;
+        justify-content: center;
+    }
+    .logo img {
+        height: 100%;
+        /* 设置logo最大宽度 */
+        max-width: 333.26px;
+    }
+
+    .gray-row {
+        background: #f0f0f8;
+    }
+</style>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>任务清单</title>
+</head>
+
+<div id="app" v-cloak>
+    <div class="table-g" v-if="projects&&projects.length">
+        <div class="table name-col">
+            <div class="table-row header">
+                <div class="table-col" style="width: 100%">功能清单</div>
+            </div>
+            <div class="table-row" :class="{'gray-row': idx%2==0}" v-for="(project, idx) in projects">
+                <div class="table-col" style="width: 100%">{{ project.project_name }}</div>
+            </div>
+        </div>
+        <div class="swiper-container">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide table">
+                    <div class="table-row header">
+                        <div class="table-col time" style="width: 20%">
+                            <div>开始时间</div>
+                            <div>结束时间</div>
+                        </div>
+                        <div class="table-col" style="width: 30%">工期(天)开发/测试</div>
+                        <div class="table-col" style="width: 20%">状态</div>
+                        <div class="table-col" style="width: 30%">当前进度(%)</div>
+                    </div>
+                    <div class="table-row" :class="{'gray-row': idx%2==0}" v-for="(project, idx) in projects">
+                        <div class="table-col time" style="width: 20%">
+                            <div class="start-time">{{ project.start_time | empty }}</div>
+                            <div class="end-time">{{ project.end_time | empty }}</div>
+                        </div>
+                        <div class="table-col" style="width: 30%">
+                            {{ project.develop_time | empty }} / {{ project.test_time | empty }}
+                        </div>
+                        <div class="table-col status" style="width: 20%" :class="{'testing': project.status=='测试中'}">
+                            {{ project.status | empty }}
+                        </div>
+                        <div class="table-col" style="width: 30%">
+                            <div class="progress">
+                                <div class="done completed" v-if="project.current_progress==100"></div>
+                                <div class="done" :style="{'width': project.current_progress+'%'}" v-else></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-slide table">
+                    <div class="table-row header">
+                        <div class="table-col" style="width: 40%">开发人员</div>
+                        <div class="table-col" style="width: 20%">产品</div>
+                        <div class="table-col" style="width: 20%">UI设计</div>
+                        <div class="table-col" style="width: 20%">测试</div>
+                    </div>
+                    <div class="table-row" :class="{'gray-row': idx%2==0}" v-for="(project, idx) in projects">
+                        <div class="table-col" style="width: 40%">{{ project.developers | join }}</div>
+                        <div class="table-col" style="width: 20%">{{ project.producers | join }}</div>
+                        <div class="table-col" style="width: 20%">{{ project.ui_designers | join }}</div>
+                        <div class="table-col" style="width: 20%">{{ project.testers | join }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="logo">
+        <img class="img" src="static/img/logo.png" alt="">
+    </div>
+</div>
+
+<link rel="stylesheet" href="static/swiper/swiper.min.css">
+<script src="static/swiper/swiper.min.js"> </script>
+<script src="static/vue/vue-2.6.10.js"></script>
+<script src="data/projects.js"></script>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            projects: $projects,
+        },
+        mounted: function () {
+            this.setLogo()
+        },
+        methods :{
+            setLogo: function () {
+                var pageHeight = window.innerHeight;
+                var tableHeight = document.getElementsByClassName("name-col")[0].offsetHeight;
+                var imgHeight = pageHeight - tableHeight - 80
+                var logo = document.getElementsByClassName("logo")[0];
+                var img = document.getElementsByClassName("img")[0];
+                if(imgHeight < 50){
+                    logo.style.display = 'none'
+                }else {
+                    logo.style.height = imgHeight + 'px'
+                    img.style.width = imgHeight*(114.39/127) + 'px'
+                }
+            },
+        },
+        filters: {
+            empty: function (val) {
+                if(val||val===0) {
+                    return val
+                }else {
+                    return '--'
+                }
+            },
+            join: function (arr) {
+                if(arr&&arr.length){
+                    return arr.join('，')
+                }else {
+                    return '--'
+                }
+            }
+        },
+    })
+
+    var swiper = new Swiper('.swiper-container', {
+        loop: true, // 去掉之后可以左右翻页
+        autoplay: {
+            delay: 5000,
+        },
+    });
+</script>
+
